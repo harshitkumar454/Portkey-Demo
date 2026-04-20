@@ -1,0 +1,6 @@
+fastapi
+uvicorn[standard]
+portkey-ai
+python-dotenv
+httpx
+mcp

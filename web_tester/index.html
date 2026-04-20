@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portkey Gateway Tester</title>
+<style>
+:root {
+  --bg: #0a0a0f;
+  --surface: #12121a;
+  --surface2: #1a1a26;
+  --border: #2a2a3a;
+  --text: #e4e4ef;
+  --text-dim: #8888a0;
+  --accent: #6c5ce7;
+  --accent-hover: #7f70f0;
+  --green: #2ed573;
+  --red: #ff4757;
+  --orange: #ffa502;
+  --blue: #3742fa;
+  --radius: 10px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; }
+a { color: var(--accent); text-decoration: none; }
+
+/* Header */
+.header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 32px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(10px);
+}
+.header h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+.header h1 span { color: var(--accent); }
+.header .subtitle { color: var(--text-dim); font-size: 13px; }
+
+/* Settings bar */
+.settings {
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 32px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.settings label { color: var(--text-dim); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.settings input {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  padding: 8px 12px;
+  font-size: 13px;
+  font-family: var(--mono);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.settings input:focus { border-color: var(--accent); }
+.settings input.wide { width: 300px; }
+.settings input.medium { width: 220px; }
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 0;
+  padding: 0 32px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.tab {
+  padding: 14px 28px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-dim);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  user-select: none;
+}
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* Main */
+.main { padding: 24px 32px; max-width: 1200px; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* Cards */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 20px;
+}
+.card h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card .desc { color: var(--text-dim); font-size: 13px; margin-bottom: 16px; line-height: 1.5; }
+.card .badge {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.badge-green { background: rgba(46,213,115,0.15); color: var(--green); }
+.badge-orange { background: rgba(255,165,2,0.15); color: var(--orange); }
+.badge-blue { background: rgba(55,66,250,0.15); color: #7c83ff; }
+
+/* Form rows */
+.form-row {
+  display: flex;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.form-group { display: flex; flex-direction: column; gap: 4px; }
+.form-group label { font-size: 11px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.form-group input, .form-group select, .form-group textarea {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  padding: 8px 12px;
+  font-size: 13px;
+  font-family: var(--mono);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--accent); }
+.form-group textarea { resize: vertical; min-height: 60px; }
+
+/* Buttons */
+.btn {
+  padding: 9px 20px;
+  border-radius: 6px;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-primary { background: var(--accent); color: white; }
+.btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btn-sm { padding: 6px 14px; font-size: 12px; }
+
+/* Output */
+.output {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 12px;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 400px;
+  overflow-y: auto;
+  display: none;
+}
+.output.visible { display: block; }
+.output .label { color: var(--text-dim); font-size: 11px; text-transform: uppercase; margin-bottom: 8px; display: block; }
+.output .success { color: var(--green); }
+.output .error { color: var(--red); }
+.output .info { color: var(--text-dim); }
+.output .highlight { color: var(--accent); }
+
+/* Spinner */
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Stream box */
+.stream-box {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 12px;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.6;
+  min-height: 60px;
+  display: none;
+}
+.stream-box.visible { display: block; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .header, .settings, .tabs, .main { padding-left: 16px; padding-right: 16px; }
+  .form-row { flex-direction: column; }
+  .settings input.wide, .settings input.medium { width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1><span>Portkey</span> Gateway Tester</h1>
+  <span class="subtitle">AI Gateway &middot; MCP Gateway</span>
+</div>
+
+<div class="settings">
+  <div>
+    <label>Portkey API Key</label><br>
+    <input type="password" id="apiKey" class="wide" placeholder="Paste your PORTKEY_API_KEY" />
+  </div>
+  <div>
+    <label>Primary Model</label><br>
+    <input type="text" id="primaryModel" class="medium" placeholder="@virtual-key/model" />
+  </div>
+  <div>
+    <label>Backup Model</label><br>
+    <input type="text" id="backupModel" class="medium" placeholder="@virtual-key/model" />
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-tab="ai">AI Gateway</div>
+  <div class="tab" data-tab="mcp">MCP Gateway</div>
+</div>
+
+<div class="main">
+
+<!-- ═══════════════════════════════ AI GATEWAY ═══════════════════════════════ -->
+<div id="tab-ai" class="tab-content active">
+
+  <!-- Chat -->
+  <div class="card">
+    <h3>Chat Completion <span class="badge badge-green">Basic</span></h3>
+    <div class="desc">Send a message through the Portkey AI Gateway. OpenAI-compatible for any provider.</div>
+    <div class="form-row">
+      <div class="form-group" style="flex:1">
+        <label>Message</label>
+        <input type="text" id="chat-msg" value="What is an AI Gateway? Answer in 1 sentence." />
+      </div>
+      <button class="btn btn-primary" onclick="runChat()">Send</button>
+    </div>
+    <div id="chat-out" class="output"></div>
+  </div>
+
+  <!-- Streaming -->
+  <div class="card">
+    <h3>Streaming <span class="badge badge-blue">Real-time</span></h3>
+    <div class="desc">Stream tokens in real-time via SSE. All gateway features work with streaming.</div>
+    <div class="form-row">
+      <div class="form-group" style="flex:1">
+        <label>Message</label>
+        <input type="text" id="stream-msg" value="Explain why AI Gateways matter in 3 bullet points." />
+      </div>
+      <button class="btn btn-primary" onclick="runStream()">Stream</button>
+    </div>
+    <div id="stream-out" class="stream-box"></div>
+  </div>
+
+  <!-- Fallback -->
+  <div class="card">
+    <h3>Fallback Strategy <span class="badge badge-orange">Reliability</span></h3>
+    <div class="desc">If the primary model fails, auto-switch to the backup. Zero downtime.</div>
+    <div class="form-row">
+      <div class="form-group" style="flex:1">
+        <label>Message</label>
+        <input type="text" id="fallback-msg" value="Say hello in one sentence." />
+      </div>
+      <button class="btn btn-primary" onclick="runFallback()">Test Fallback</button>
+    </div>
+    <div id="fallback-out" class="output"></div>
+  </div>
+
+  <!-- Retry -->
+  <div class="card">
+    <h3>Automatic Retries <span class="badge badge-orange">Reliability</span></h3>
+    <div class="desc">Exponential backoff on 429/500/503. Configurable attempts and status codes.</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Attempts</label>
+        <input type="number" id="retry-attempts" value="3" style="width:80px" />
+      </div>
+      <div class="form-group" style="flex:1">
+        <label>Message</label>
+        <input type="text" id="retry-msg" value="Say 'retry works!'" />
+      </div>
+      <button class="btn btn-primary" onclick="runRetry()">Test Retry</button>
+    </div>
+    <div id="retry-out" class="output"></div>
+  </div>
+
+  <!-- Caching -->
+  <div class="card">
+    <h3>Caching <span class="badge badge-green">Performance</span></h3>
+    <div class="desc">Sends the same request twice — second should be much faster (cache hit). See the speedup live.</div>
+    <div class="form-row">
+      <div class="form-group" style="flex:1">
+        <label>Message (same both times)</label>
+        <input type="text" id="cache-msg" value="What is the capital of France? One word." />
+      </div>
+      <div class="form-group">
+        <label>Mode</label>
+        <select id="cache-mode">
+          <option value="simple">Simple</option>
+          <option value="semantic">Semantic</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="runCache()">Test Cache</button>
+    </div>
+    <div id="cache-out" class="output"></div>
+  </div>
+
+  <!-- Load Balancing -->
+  <div class="card">
+    <h3>Load Balancing <span class="badge badge-blue">Routing</span></h3>
+    <div class="desc">Distribute requests across models with configurable weights. See the distribution live.</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Weight A</label>
+        <input type="number" id="lb-weight-a" value="0.7" step="0.1" style="width:80px" />
+      </div>
+      <div class="form-group">
+        <label>Weight B</label>
+        <input type="number" id="lb-weight-b" value="0.3" step="0.1" style="width:80px" />
+      </div>
+      <div class="form-group">
+        <label>Requests</label>
+        <input type="number" id="lb-n" value="6" style="width:80px" />
+      </div>
+      <button class="btn btn-primary" onclick="runLB()">Test LB</button>
+    </div>
+    <div id="lb-out" class="output"></div>
+  </div>
+
+  <!-- Conditional Routing -->
+  <div class="card">
+    <h3>Conditional Routing <span class="badge badge-blue">Routing</span></h3>
+    <div class="desc">Route paid users to the premium model, free users to basic — based on metadata.</div>
+    <div class="form-row">
+      <button class="btn btn-primary" onclick="runConditional()">Test Routing</button>
+    </div>
+    <div id="conditional-out" class="output"></div>
+  </div>
+
+  <!-- Guardrails -->
+  <div class="card">
+    <h3>Guardrails <span class="badge badge-orange">Safety</span></h3>
+    <div class="desc">Block requests containing email addresses using a regex guardrail. Test with and without emails.</div>
+    <div class="form-row">
+      <div class="form-group" style="flex:1">
+        <label>Message (try with/without an email)</label>
+        <input type="text" id="guard-msg" value="Send a mail to test@example.com" />
+      </div>
+      <button class="btn btn-primary" onclick="runGuardrail()">Test Guardrail</button>
+    </div>
+    <div id="guard-out" class="output"></div>
+  </div>
+
+  <!-- Metadata -->
+  <div class="card">
+    <h3>Metadata &amp; Tracing <span class="badge badge-green">Observability</span></h3>
+    <div class="desc">Tag requests with custom metadata and trace IDs. Find them in the Portkey dashboard.</div>
+    <div class="form-row">
+      <div class="form-group" style="flex:1">
+        <label>Message</label>
+        <input type="text" id="meta-msg" value="What is Portkey?" />
+      </div>
+      <div class="form-group">
+        <label>User ID</label>
+        <input type="text" id="meta-user" value="user-42" style="width:120px" />
+      </div>
+      <div class="form-group">
+        <label>Environment</label>
+        <input type="text" id="meta-env" value="demo" style="width:120px" />
+      </div>
+      <button class="btn btn-primary" onclick="runMetadata()">Send with Metadata</button>
+    </div>
+    <div id="meta-out" class="output"></div>
+  </div>
+
+  <!-- Nested -->
+  <div class="card">
+    <h3>Nested Strategies <span class="badge badge-orange">Combined</span></h3>
+    <div class="desc">Cache + Retry + Fallback all in one config. The full production stack.</div>
+    <div class="form-row">
+      <div class="form-group" style="flex:1">
+        <label>Message</label>
+        <input type="text" id="nested-msg" value="What is 1+1? Just the number." />
+      </div>
+      <button class="btn btn-primary" onclick="runNested()">Test Nested</button>
+    </div>
+    <div id="nested-out" class="output"></div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════ MCP GATEWAY ══════════════════════════════ -->
+<div id="tab-mcp" class="tab-content">
+
+  <!-- List Integrations -->
+  <div class="card">
+    <h3>List MCP Integrations <span class="badge badge-green">Registry</span></h3>
+    <div class="desc">Fetch all MCP servers registered in your workspace.</div>
+    <div class="form-row">
+      <button class="btn btn-primary" onclick="mcpList()">List Servers</button>
+    </div>
+    <div id="mcp-list-out" class="output"></div>
+  </div>
+
+  <!-- Register -->
+  <div class="card">
+    <h3>Register MCP Server <span class="badge badge-blue">Registry</span></h3>
+    <div class="desc">Add a new MCP server to Portkey's registry. The gateway will proxy to it.</div>
+    <div class="form-row">
+      <div class="form-group" style="flex:1">
+        <label>Server Name</label>
+        <input type="text" id="mcp-reg-name" value="Demo MCP Server" />
+      </div>
+      <div class="form-group" style="flex:1">
+        <label>Server URL</label>
+        <input type="text" id="mcp-reg-url" placeholder="https://your-server.com/mcp" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Slug</label>
+        <input type="text" id="mcp-reg-slug" placeholder="demo-mcp-server" style="width:200px" />
+      </div>
+      <div class="form-group">
+        <label>Auth Type</label>
+        <select id="mcp-reg-auth">
+          <option value="none">None</option>
+          <option value="api_key">API Key</option>
+          <option value="oauth">OAuth</option>
+          <option value="headers">Headers</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Transport</label>
+        <select id="mcp-reg-transport">
+          <option value="http">HTTP (Streamable)</option>
+          <option value="sse">SSE</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="mcpRegister()">Register</button>
+    </div>
+    <div id="mcp-reg-out" class="output"></div>
+  </div>
+
+  <!-- List Tools -->
+  <div class="card">
+    <h3>List Tools <span class="badge badge-green">Discovery</span></h3>
+    <div class="desc">Connect to a registered MCP server through the gateway and list available tools.</div>
+    <div class="form-row">
+      <div class="form-group" style="flex:1">
+        <label>Server Slug</label>
+        <input type="text" id="mcp-tools-slug" placeholder="demo-mcp-server" />
+      </div>
+      <div class="form-group">
+        <label>Gateway URL</label>
+        <input type="text" id="mcp-tools-gw" value="https://mcp.portkey.ai" style="width:250px" />
+      </div>
+      <button class="btn btn-primary" onclick="mcpListTools()">List Tools</button>
+    </div>
+    <div id="mcp-tools-out" class="output"></div>
+  </div>
+
+  <!-- Call Tool -->
+  <div class="card">
+    <h3>Call Tool <span class="badge badge-orange">Execution</span></h3>
+    <div class="desc">Execute a tool call through the MCP gateway. Every call is logged.</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Server Slug</label>
+        <input type="text" id="mcp-call-slug" placeholder="demo-mcp-server" style="width:180px" />
+      </div>
+      <div class="form-group">
+        <label>Tool Name</label>
+        <input type="text" id="mcp-call-tool" placeholder="add_numbers" style="width:180px" />
+      </div>
+      <div class="form-group" style="flex:1">
+        <label>Arguments (JSON)</label>
+        <input type="text" id="mcp-call-args" value='{"a": 17, "b": 25}' />
+      </div>
+      <button class="btn btn-primary" onclick="mcpCallTool()">Call Tool</button>
+    </div>
+    <div id="mcp-call-out" class="output"></div>
+  </div>
+
+  <!-- Delete -->
+  <div class="card">
+    <h3>Delete Integration <span class="badge badge-orange">Cleanup</span></h3>
+    <div class="desc">Remove an MCP server from the registry.</div>
+    <div class="form-row">
+      <div class="form-group" style="flex:1">
+        <label>Integration ID</label>
+        <input type="text" id="mcp-del-id" placeholder="Paste integration ID" />
+      </div>
+      <button class="btn btn-primary" onclick="mcpDelete()">Delete</button>
+    </div>
+    <div id="mcp-del-out" class="output"></div>
+  </div>
+
+  <!-- Client Configs -->
+  <div class="card">
+    <h3>Client Configuration Generator <span class="badge badge-blue">Setup</span></h3>
+    <div class="desc">Generate ready-to-paste configs for Claude Desktop, Cursor, and VS Code.</div>
+    <div class="form-row">
+      <div class="form-group" style="flex:1">
+        <label>Server Slug</label>
+        <input type="text" id="mcp-config-slug" placeholder="e.g. linear, github, demo-mcp-server" />
+      </div>
+      <button class="btn btn-primary" onclick="mcpGenConfig()">Generate Configs</button>
+    </div>
+    <div id="mcp-config-out" class="output"></div>
+  </div>
+
+</div>
+</div>
+
+<script>
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function v(id) { return document.getElementById(id).value.trim(); }
+
+function getApiKey() { return v('apiKey'); }
+function getModel() { return v('primaryModel'); }
+function getBackup() { return v('backupModel'); }
+
+function show(id, html) {
+  const el = document.getElementById(id);
+  el.innerHTML = html;
+  el.classList.add('visible');
+}
+
+function loading(id, btn) {
+  btn.disabled = true;
+  btn.dataset.origText = btn.innerHTML;
+  btn.innerHTML = '<span class="spinner"></span> Running...';
+  const el = document.getElementById(id);
+  el.innerHTML = '<span class="info">Running...</span>';
+  el.classList.add('visible');
+  return () => { btn.disabled = false; btn.innerHTML = btn.dataset.origText; };
+}
+
+async function post(url, body) {
+  const payload = { ...body };
+  const key = getApiKey();
+  if (key) payload.api_key = key;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  return res.json();
+}
+
+function fmt(obj) { return JSON.stringify(obj, null, 2); }
+
+function resultHtml(data) {
+  if (data.error) return `<span class="error">Error: ${data.error}</span>`;
+  return `<span class="success">${fmt(data)}</span>`;
+}
+
+// ─── Tabs ─────────────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+  });
+});
+
+// ─── AI Gateway ───────────────────────────────────────────────────────────────
+
+async function runChat() {
+  const btn = event.target.closest('.btn');
+  const done = loading('chat-out', btn);
+  try {
+    const data = await post('/api/ai/chat', {
+      model: getModel(),
+      messages: [
+        { role: 'system', content: 'You are a concise assistant. Reply in 1-2 sentences.' },
+        { role: 'user', content: v('chat-msg') },
+      ],
+    });
+    if (data.error) { show('chat-out', `<span class="error">Error: ${data.error}</span>`); return; }
+    show('chat-out',
+      `<span class="label">Response</span>` +
+      `<span class="highlight">Model:</span> ${data.model}\n` +
+      `<span class="highlight">Tokens:</span> ${data.usage.prompt_tokens} in / ${data.usage.completion_tokens} out\n` +
+      `<span class="highlight">Latency:</span> ${data.elapsed_ms}ms\n\n` +
+      `${data.content}`
+    );
+  } finally { done(); }
+}
+
+async function runStream() {
+  const btn = event.target.closest('.btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Streaming...';
+  const box = document.getElementById('stream-out');
+  box.classList.add('visible');
+  box.textContent = '';
+
+  const key = getApiKey();
+  const body = {
+    model: getModel(),
+    messages: [
+      { role: 'system', content: 'You are a concise assistant.' },
+      { role: 'user', content: v('stream-msg') },
+    ],
+  };
+  if (key) body.api_key = key;
+
+  try {
+    const res = await fetch('/api/ai/chat/stream', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
+      for (const line of lines) {
+        if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+          try {
+            const chunk = JSON.parse(line.slice(6));
+            if (chunk.content) box.textContent += chunk.content;
+          } catch {}
+        }
+      }
+    }
+  } catch (e) {
+    box.textContent = 'Error: ' + e.message;
+  }
+  btn.disabled = false;
+  btn.innerHTML = 'Stream';
+}
+
+async function runFallback() {
+  const btn = event.target.closest('.btn');
+  const done = loading('fallback-out', btn);
+  try {
+    const data = await post('/api/ai/fallback', {
+      primary_model: getModel(),
+      backup_model: getBackup(),
+      messages: [{ role: 'user', content: v('fallback-msg') }],
+    });
+    if (data.error) { show('fallback-out', `<span class="error">Error: ${data.error}</span>`); return; }
+    show('fallback-out',
+      `<span class="highlight">Model used:</span> ${data.model}\n` +
+      `<span class="highlight">Latency:</span> ${data.elapsed_ms}ms\n\n` +
+      `${data.content}\n\n` +
+      `<span class="info">(If primary was down, backup would have been used transparently.)</span>`
+    );
+  } finally { done(); }
+}
+
+async function runRetry() {
+  const btn = event.target.closest('.btn');
+  const done = loading('retry-out', btn);
+  try {
+    const data = await post('/api/ai/retry', {
+      model: getModel(),
+      attempts: parseInt(v('retry-attempts')),
+      messages: [{ role: 'user', content: v('retry-msg') }],
+    });
+    if (data.error) { show('retry-out', `<span class="error">Error: ${data.error}</span>`); return; }
+    show('retry-out',
+      `<span class="highlight">Model:</span> ${data.model}\n` +
+      `<span class="highlight">Latency:</span> ${data.elapsed_ms}ms\n\n` +
+      `${data.content}\n\n` +
+      `<span class="info">Config: ${v('retry-attempts')} retry attempts on 429/500/503</span>`
+    );
+  } finally { done(); }
+}
+
+async function runCache() {
+  const btn = event.target.closest('.btn');
+  const done = loading('cache-out', btn);
+  try {
+    const data = await post('/api/ai/cache', {
+      model: getModel(),
+      cache_mode: v('cache-mode'),
+      messages: [{ role: 'user', content: v('cache-msg') }],
+    });
+    if (data.error) { show('cache-out', `<span class="error">Error: ${data.error}</span>`); return; }
+    show('cache-out',
+      `<span class="label">Cache Test</span>` +
+      `<span class="highlight">Request 1 (${data.request_1.label}):</span> ${data.request_1.content}  [${data.request_1.elapsed_ms}ms]\n` +
+      `<span class="highlight">Request 2 (${data.request_2.label}):</span> ${data.request_2.content}  [${data.request_2.elapsed_ms}ms]\n\n` +
+      `<span class="success">Speedup: ${data.speedup}</span>`
+    );
+  } finally { done(); }
+}
+
+async function runLB() {
+  const btn = event.target.closest('.btn');
+  const done = loading('lb-out', btn);
+  try {
+    const data = await post('/api/ai/loadbalance', {
+      targets: [
+        { model: getModel(), weight: parseFloat(v('lb-weight-a')) },
+        { model: getBackup(), weight: parseFloat(v('lb-weight-b')) },
+      ],
+      num_requests: parseInt(v('lb-n')),
+    });
+    if (data.error) { show('lb-out', `<span class="error">Error: ${data.error}</span>`); return; }
+    let lines = '<span class="label">Load Balance Distribution</span>';
+    data.results.forEach(r => { lines += `Request ${r.request}: ${r.model}\n`; });
+    lines += '\n<span class="highlight">Distribution:</span>\n';
+    for (const [model, count] of Object.entries(data.distribution)) {
+      const pct = (count / data.results.length * 100).toFixed(0);
+      const bar = '█'.repeat(Math.round(pct / 5));
+      lines += `  ${model}: ${count} (${pct}%) ${bar}\n`;
+    }
+    show('lb-out', lines);
+  } finally { done(); }
+}
+
+async function runConditional() {
+  const btn = event.target.closest('.btn');
+  const done = loading('conditional-out', btn);
+  try {
+    const data = await post('/api/ai/conditional', {
+      premium_model: getModel(),
+      basic_model: getBackup(),
+    });
+    if (data.error) { show('conditional-out', `<span class="error">Error: ${data.error}</span>`); return; }
+    let lines = '<span class="label">Conditional Routing Results</span>';
+    data.results.forEach(r => { lines += `user_plan="${r.plan}" → routed to: <span class="highlight">${r.routed_to}</span>\n`; });
+    show('conditional-out', lines);
+  } finally { done(); }
+}
+
+async function runGuardrail() {
+  const btn = event.target.closest('.btn');
+  const done = loading('guard-out', btn);
+  try {
+    const data = await post('/api/ai/guardrail', {
+      model: getModel(),
+      messages: [{ role: 'user', content: v('guard-msg') }],
+    });
+    if (data.blocked) {
+      show('guard-out', `<span class="error">BLOCKED by guardrail</span>\n\n${data.error}`);
+    } else {
+      show('guard-out', `<span class="success">PASSED guardrail check</span>\n\n${data.content}`);
+    }
+  } finally { done(); }
+}
+
+async function runMetadata() {
+  const btn = event.target.closest('.btn');
+  const done = loading('meta-out', btn);
+  try {
+    const data = await post('/api/ai/metadata', {
+      model: getModel(),
+      messages: [{ role: 'user', content: v('meta-msg') }],
+      metadata: { user_id: v('meta-user'), environment: v('meta-env'), feature: 'web-tester' },
+    });
+    if (data.error) { show('meta-out', `<span class="error">Error: ${data.error}</span>`); return; }
+    show('meta-out',
+      `<span class="highlight">Trace ID:</span> ${data.trace_id}\n` +
+      `<span class="highlight">Model:</span> ${data.model}\n` +
+      `<span class="highlight">Latency:</span> ${data.elapsed_ms}ms\n\n` +
+      `${data.content}\n\n` +
+      `<span class="info">Find in dashboard: https://app.portkey.ai → Logs → trace_id: ${data.trace_id}</span>`
+    );
+  } finally { done(); }
+}
+
+async function runNested() {
+  const btn = event.target.closest('.btn');
+  const done = loading('nested-out', btn);
+  try {
+    const data = await post('/api/ai/nested', {
+      primary_model: getModel(),
+      backup_model: getBackup(),
+      messages: [{ role: 'user', content: v('nested-msg') }],
+    });
+    if (data.error) { show('nested-out', `<span class="error">Error: ${data.error}</span>`); return; }
+    show('nested-out',
+      `<span class="highlight">Model:</span> ${data.model}\n` +
+      `<span class="highlight">Latency:</span> ${data.elapsed_ms}ms\n` +
+      `<span class="highlight">Config:</span> ${data.config_summary}\n\n` +
+      `${data.content}`
+    );
+  } finally { done(); }
+}
+
+// ─── MCP Gateway ──────────────────────────────────────────────────────────────
+
+async function mcpList() {
+  const btn = event.target.closest('.btn');
+  const done = loading('mcp-list-out', btn);
+  try {
+    const data = await post('/api/mcp/list', {});
+    if (data.error) { show('mcp-list-out', `<span class="error">Error: ${data.error}</span>`); return; }
+    if (!data.integrations.length) { show('mcp-list-out', '<span class="info">No MCP integrations found.</span>'); return; }
+    let lines = `<span class="label">${data.integrations.length} integration(s) found</span>\n`;
+    data.integrations.forEach((item, i) => {
+      lines += `<span class="highlight">[${i+1}] ${item.name || 'N/A'}</span>\n`;
+      lines += `    ID:        ${item.id || 'N/A'}\n`;
+      lines += `    Slug:      ${item.slug || 'N/A'}\n`;
+      lines += `    URL:       ${item.url || 'N/A'}\n`;
+      lines += `    Transport: ${item.transport || 'N/A'}\n`;
+      lines += `    Auth:      ${item.auth_type || 'N/A'}\n\n`;
+    });
+    show('mcp-list-out', lines);
+  } finally { done(); }
+}
+
+async function mcpRegister() {
+  const btn = event.target.closest('.btn');
+  const done = loading('mcp-reg-out', btn);
+  try {
+    const data = await post('/api/mcp/register', {
+      name: v('mcp-reg-name'),
+      url: v('mcp-reg-url'),
+      slug: v('mcp-reg-slug'),
+      auth_type: v('mcp-reg-auth'),
+      transport: v('mcp-reg-transport'),
+    });
+    show('mcp-reg-out', resultHtml(data));
+  } finally { done(); }
+}
+
+async function mcpListTools() {
+  const btn = event.target.closest('.btn');
+  const done = loading('mcp-tools-out', btn);
+  try {
+    const data = await post('/api/mcp/tools', {
+      slug: v('mcp-tools-slug'),
+      gateway_url: v('mcp-tools-gw'),
+    });
+    if (data.error) { show('mcp-tools-out', `<span class="error">Error: ${data.error}</span>`); return; }
+    let lines = `<span class="label">${data.tools.length} tool(s) available</span>\n`;
+    data.tools.forEach(t => {
+      lines += `<span class="highlight">${t.name}</span>\n`;
+      lines += `  ${t.description || '(no description)'}\n`;
+      if (t.schema && t.schema.properties) {
+        lines += `  Params: ${Object.keys(t.schema.properties).join(', ')}\n`;
+      }
+      lines += '\n';
+    });
+    show('mcp-tools-out', lines);
+  } finally { done(); }
+}
+
+async function mcpCallTool() {
+  const btn = event.target.closest('.btn');
+  const done = loading('mcp-call-out', btn);
+  try {
+    let args = {};
+    try { args = JSON.parse(v('mcp-call-args')); } catch {}
+    const data = await post('/api/mcp/call', {
+      slug: v('mcp-call-slug'),
+      gateway_url: v('mcp-tools-gw'),
+      tool_name: v('mcp-call-tool'),
+      arguments: args,
+    });
+    if (data.error) { show('mcp-call-out', `<span class="error">Error: ${data.error}</span>`); return; }
+    show('mcp-call-out',
+      `<span class="highlight">Latency:</span> ${data.elapsed_ms}ms\n\n` +
+      `<span class="label">Result</span>${data.result}`
+    );
+  } finally { done(); }
+}
+
+async function mcpDelete() {
+  const btn = event.target.closest('.btn');
+  const done = loading('mcp-del-out', btn);
+  try {
+    const data = await post('/api/mcp/delete', { integration_id: v('mcp-del-id') });
+    show('mcp-del-out', resultHtml(data));
+  } finally { done(); }
+}
+
+function mcpGenConfig() {
+  const slug = v('mcp-config-slug');
+  if (!slug) { show('mcp-config-out', '<span class="error">Enter a server slug first.</span>'); return; }
+  const gw = 'https://mcp.portkey.ai';
+  const url = `${gw}/${slug}/mcp`;
+
+  const claude = JSON.stringify({ mcpServers: { [slug]: { url, headers: { "x-portkey-api-key": "YOUR_PORTKEY_API_KEY" } } } }, null, 2);
+  const cursor = JSON.stringify({ mcpServers: { [slug]: { url, headers: { "x-portkey-api-key": "YOUR_PORTKEY_API_KEY" } } } }, null, 2);
+  const vscode = JSON.stringify({ "mcp.servers": { [slug]: { url, headers: { "x-portkey-api-key": "YOUR_PORTKEY_API_KEY" } } } }, null, 2);
+  const oauthConf = JSON.stringify({ mcpServers: { [slug]: { url } } }, null, 2);
+
+  show('mcp-config-out',
+    `<span class="label">Claude Desktop  (~/.../claude_desktop_config.json)</span>${claude}\n\n` +
+    `<span class="label">Cursor  (Cmd+Shift+P → MCP Settings)</span>${cursor}\n\n` +
+    `<span class="label">VS Code  (settings.json)</span>${vscode}\n\n` +
+    `<span class="label">OAuth (no API key needed)</span>${oauthConf}`
+  );
+}
+</script>
+
+</body>
+</html>
